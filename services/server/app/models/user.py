@@ -1,6 +1,8 @@
+"""Модель пользователя — ORM для таблицы users."""
 from sqlalchemy import Column, Integer, BigInteger, String, DateTime, func
 
 from . import Base
+
 
 class User(Base):
     __tablename__ = "users"

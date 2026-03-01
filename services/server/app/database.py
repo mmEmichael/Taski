@@ -1,3 +1,4 @@
+"""Подключение к БД — engine, сессии и dependency для FastAPI."""
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -16,6 +17,7 @@ SessionLocal = sessionmaker(
 
 
 def get_db():
+    """Dependency: выдаёт сессию БД, закрывает после завершения."""
     db = SessionLocal()
     try:
         yield db
