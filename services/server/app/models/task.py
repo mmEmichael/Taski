@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Enum, Integer, BigInteger, String, DateTime, func
+from sqlalchemy import Column, Enum, Integer, String, DateTime, func
 
 from . import Base
 
