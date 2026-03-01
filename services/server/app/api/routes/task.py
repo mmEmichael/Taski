@@ -18,19 +18,19 @@ async def get_task_info():
     return 0
 
 
-@router.get(f"/tasks/{id}")
-async def get_task_info(id):
+@router.get("/tasks/{id}")
+async def get_task_info(id: int):
     """Получение задачи по ID."""
     return id
 
 
-@router.patch(f"/tasks/{id}")
+@router.patch("/tasks/{id}")
 async def update_task(data: TaskUpdate):
     """Частичное обновление задачи."""
     return data
 
 
-@router.delete(f"/tasks/{id}")
-async def delete_task(id):
+@router.delete("/tasks/{id}")
+async def delete_task(id: int):
     """Удаление задачи."""
     return id
