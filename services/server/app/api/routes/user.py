@@ -12,8 +12,8 @@ async def register_user(credentials: UserCredentials):
     return credentials
 
 
-@router.post("/user/login")
-async def login_user(credentials: UserCredentials):
+@router.post("/user/auth")
+async def auth_user(credentials: UserCredentials):
     """Авторизация пользователя."""
     return credentials
 
