@@ -1,7 +1,7 @@
 """API пользователей — регистрация, логин, информация."""
 from fastapi import APIRouter
 
-from ...schemas.user import UserCredentials
+from app.schemas.user import UserCredentials
 
 router = APIRouter()
 

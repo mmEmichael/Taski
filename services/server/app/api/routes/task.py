@@ -1,7 +1,7 @@
 """API задач — CRUD операции."""
 from fastapi import APIRouter
 
-from ...schemas.task import TaskCreate, TaskUpdate
+from app.schemas.task import TaskCreate, TaskUpdate
 
 router = APIRouter()
 
