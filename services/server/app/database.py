@@ -1,10 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .config import db_url
+from .config import DATABASE_URL
 
 engine = create_engine(
-    db_url,
+    DATABASE_URL,
     pool_pre_ping=True,
 )
 
