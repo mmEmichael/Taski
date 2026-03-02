@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
     # TODO: остановить планировщик/воркер, если запускали выше
     ...
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(user.router)
 app.include_router(task.router)
