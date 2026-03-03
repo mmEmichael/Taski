@@ -4,7 +4,7 @@ from sqlalchemy import insert
 from sqlalchemy.orm import Session
 from jwt import encode
 
-from app.api.deps import hash_password, verify_password
+from app.api.deps import hash_password, verify_password, get_current_user
 from app.schemas.user import UserCredentials
 from app.models import User
 from app.database import get_db
@@ -38,7 +38,7 @@ async def auth_user(credentials: UserCredentials, db: Session = Depends(get_db))
     
     token = encode(
         {
-            "sub": user.id,
+            "sub": str(user.id),
             "username": user.username,
         },
         SECRET_KEY,
@@ -48,7 +48,8 @@ async def auth_user(credentials: UserCredentials, db: Session = Depends(get_db))
 
 
 
-@router.get("user/info")
-async def get_user_info(credentials: UserCredentials):
+@router.get("/user/info")
+async def get_user_info(db: Session = Depends(get_db), user_id: int = Depends(get_current_user)):
     """Получение информации о пользователе."""
-    return credentials
+    user = db.query(User).filter(User.id == user_id).first()
+    return {"username": user.username, "tg_id": user.tg_id, "created": user.created_at}
