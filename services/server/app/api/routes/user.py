@@ -1,18 +1,19 @@
 """API пользователей — регистрация, логин, информация."""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import insert
 from sqlalchemy.orm import Session
-
+from jwt import encode
 
 from app.api.deps import hash_password, verify_password
 from app.schemas.user import UserCredentials
 from app.models import User
 from app.database import get_db
+from app.config import SECRET_KEY
 
 router = APIRouter()
 
 
-@router.post("/users/register")
+@router.post("/user/register")
 async def register_user(credentials: UserCredentials, db: Session = Depends(get_db)):
     """Регистрация нового пользователя."""
     password_hash = hash_password(credentials.password)
@@ -27,12 +28,27 @@ async def register_user(credentials: UserCredentials, db: Session = Depends(get_
 
 
 @router.post("/user/auth")
-async def auth_user(credentials: UserCredentials):
+async def auth_user(credentials: UserCredentials, db: Session = Depends(get_db)):
     """Авторизация пользователя."""
-    return credentials
+    user = db.query(User).filter(User.username == credentials.username).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    if not verify_password(credentials.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    token = encode(
+        {
+            "sub": user.id,
+            "username": user.username,
+        },
+        SECRET_KEY,
+        algorithm="HS256",
+    )
+    return {"token": token}
 
 
-@router.get("users/info")
+
+@router.get("user/info")
 async def get_user_info(credentials: UserCredentials):
     """Получение информации о пользователе."""
     return credentials

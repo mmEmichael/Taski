@@ -3,3 +3,4 @@ psycopg2-binary
 pydantic-settings
 sqlalchemy
 passlib
+PyJWT>=2.0.0
