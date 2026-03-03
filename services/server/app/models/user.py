@@ -8,7 +8,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    tg_id = Column(BigInteger, unique=True, nullable=False)
-    username = Column(String(255), nullable=True)
+    tg_id = Column(BigInteger, unique=True, nullable=True)
+    username = Column(String(255), nullable=False)
     password_hash = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
