@@ -1,102 +1,67 @@
 """API задач — CRUD операции."""
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy import insert
-from sqlalchemy.orm import Session, query
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 
 from app.schemas.task import TaskCreate, TaskUpdate
 from app.database import get_db
 from app.api.deps import get_current_user
-from app.models.task import Task, TaskStatus
+from app.models.task import TaskStatus
+from app.services.task_service import (
+    create_task,
+    list_tasks,
+    get_task_by_id,
+    update_task,
+    delete_task,
+)
 
 router = APIRouter()
 
 
 @router.post("/tasks/create")
-async def create_task(
-    data: TaskCreate, 
-    db: Session = Depends(get_db), 
-    user_id: int = Depends(get_current_user)
-    ):
+async def create_task_route(
+    data: TaskCreate,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user),
+):
     """Создание новой задачи."""
-    query = insert(Task).values(
-        user_id=user_id,
-        title=data.title,
-        description=data.description,
-        status=data.status,
-        due_at=data.due_at
-    )
-    db.execute(query)
-    db.commit()
-    return {"message": "Task created successfully"}
-    
+    return create_task(db=db, user_id=user_id, data=data)
 
 
 @router.get("/tasks")
-async def get_task_info(
-    db: Session = Depends(get_db), 
+async def get_task_info_route(
+    db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user),
-    status: TaskStatus | None = Query(None)
-    ):
+    status: TaskStatus | None = Query(None),
+):
     """Список всех задач."""
-    query = db.query(Task).filter(Task.user_id == user_id)
-
-    if status is not None:
-        query = query.filter(Task.status == status)
-
-    rows = query.all()
-    return [{"id": r.id, "title": r.title} for r in rows]
+    return list_tasks(db=db, user_id=user_id, status=status)
 
 
 @router.get("/tasks/{id}")
-async def get_task_info(
+async def get_task_info_route_by_id(
     id: int,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user),
 ):
     """Получение задачи по ID."""
-    task = db.query(Task).filter(Task.id == id, Task.user_id == user_id).first()
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task
+    return get_task_by_id(db=db, user_id=user_id, task_id=id)
 
 
 @router.patch("/tasks")
-async def update_task(
+async def update_task_route(
     data: TaskUpdate,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user),
 ):
     """Частичное обновление задачи."""
-    task = db.query(Task).filter(Task.id == data.id, Task.user_id == user_id).first()
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    # Обновляем только те поля, которые переданы
-    if data.title is not None:
-        task.title = data.title
-    if data.description is not None:
-        task.description = data.description
-    if data.status is not None:
-        task.status = data.status
-    if data.due_at is not None:
-        task.due_at = data.due_at  # при необходимости конвертируй из строки в datetime
-
-    db.commit()
-    db.refresh(task)
-    return task
+    return update_task(db=db, user_id=user_id, data=data)
 
 
 @router.delete("/tasks/{id}")
-async def delete_task(
+async def delete_task_route(
     id: int,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user),
 ):
     """Удаление задачи."""
-    task = db.query(Task).filter(Task.id == id, Task.user_id == user_id).first()
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    db.delete(task)
-    db.commit()
-    return {"message": "Task deleted successfully"}
+    return delete_task(db=db, user_id=user_id, task_id=id)
