@@ -21,7 +21,10 @@ def verify_password(password: str, hashed_password: str) -> bool:
     """Проверка пароля."""
     return pwd_context.verify(password, hashed_password)
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_current_user(
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+    ):
     """Получение текущего пользователя."""
     try:
         decoded_token = decode(token, SECRET_KEY, algorithms=["HS256"])

@@ -14,7 +14,10 @@ router = APIRouter()
 
 
 @router.post("/user/register")
-async def register_user(credentials: UserCredentials, db: Session = Depends(get_db)):
+async def register_user(
+    credentials: UserCredentials, 
+    db: Session = Depends(get_db)
+    ):
     """Регистрация нового пользователя."""
     password_hash = hash_password(credentials.password)
     query = insert(User).values(
@@ -28,7 +31,10 @@ async def register_user(credentials: UserCredentials, db: Session = Depends(get_
 
 
 @router.post("/user/auth")
-async def auth_user(credentials: UserCredentials, db: Session = Depends(get_db)):
+async def auth_user(
+    credentials: UserCredentials, 
+    db: Session = Depends(get_db)
+    ):
     """Авторизация пользователя."""
     user = db.query(User).filter(User.username == credentials.username).first()
     if not user:
@@ -49,7 +55,10 @@ async def auth_user(credentials: UserCredentials, db: Session = Depends(get_db))
 
 
 @router.get("/user/info")
-async def get_user_info(db: Session = Depends(get_db), user_id: int = Depends(get_current_user)):
+async def get_user_info(
+    db: Session = Depends(get_db), 
+    user_id: int = Depends(get_current_user)
+    ):
     """Получение информации о пользователе."""
     user = db.query(User).filter(User.id == user_id).first()
     return {"username": user.username, "tg_id": user.tg_id, "created": user.created_at}
