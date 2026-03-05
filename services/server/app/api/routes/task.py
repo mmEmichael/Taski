@@ -1,15 +1,30 @@
 """API задач — CRUD операции."""
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy import insert
+from sqlalchemy.orm import Session
 
 from app.schemas.task import TaskCreate, TaskUpdate
+from app.database import get_db
+from app.api.deps import get_current_user
+from app.models import Task
 
 router = APIRouter()
 
 
 @router.post("/tasks/create")
-async def create_task(data: TaskCreate):
+async def create_task(data: TaskCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user)):
     """Создание новой задачи."""
-    return data
+    query = insert(Task).values(
+        user_id=user_id,
+        title=data.title,
+        description=data.description,
+        status=data.status,
+        due_at=data.due_at
+    )
+    db.execute(query)
+    db.commit()
+    return {"message": "Task created successfully"}
+    
 
 
 @router.get("/tasks")
