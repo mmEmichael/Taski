@@ -30,7 +30,7 @@ async def register_user(
     return {"message": "User registered successfully"}
 
 
-@router.post("/user/auth")
+@router.get("/user/auth")
 async def auth_user(
     credentials: UserCredentials, 
     db: Session = Depends(get_db)
@@ -53,7 +53,7 @@ async def auth_user(
     return {"token": token}
 
 
-@router.post("/user/tg/auth")
+@router.get("/user/tg/auth")
 async def auth_user_by_tg(
     credentials: UserCredentials, 
     db: Session = Depends(get_db)
