@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class UserCredentials(BaseModel):
-    """Регистрация/логин: логин, пароль и опциональный Telegram ID."""
-    username: str
-    password: str
+    """Регистрация/логин: логин, пароль, Telegram ID."""
+    username: str | None = None
+    password: str | None = None
     tg_id: int | None = None

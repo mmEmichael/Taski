@@ -53,6 +53,26 @@ async def auth_user(
     return {"token": token}
 
 
+@router.post("/user/tg/auth")
+async def auth_user_by_tg(
+    credentials: UserCredentials, 
+    db: Session = Depends(get_db)
+    ):
+    """Авторизация пользователя telegram."""
+    user = db.query(User).filter(User.tg_id == credentials.tg_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid Telegram ID")
+    
+    token = encode(
+        {
+            "sub": str(user.id),
+            "username": user.username,
+        },
+        SECRET_KEY,
+        algorithm="HS256",
+    )
+    return {"token": token}
+
 
 @router.get("/user/info")
 async def get_user_info(
