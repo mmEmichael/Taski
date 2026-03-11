@@ -6,6 +6,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.config import SERVER_BASE_URL
 from app.database import SessionLocal
@@ -19,7 +20,6 @@ logger = logging.getLogger(__name__)
 # Create tasks
 # //////////////////////////////////////////////////////////////////
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 cancel_kb = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -164,4 +164,62 @@ async def cmd_new_task(message: Message):
     for task in tasks:
         task_id = task["id"]
         task_title = task["title"]
-        await message.answer(f"ID: {task_id}| {task_title}")
+        await message.answer(
+            f"ID: {task_id}| {task_title}",
+            reply_markup=delete_task_inline_kb(task_id)
+            )
+
+
+# //////////////////////////////////////////////////////////////////
+# DELETE Task
+# //////////////////////////////////////////////////////////////////
+
+
+def delete_task_inline_kb(task_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Удалить🗑️",
+                    callback_data=f"delete_task:{task_id}",
+                )
+            ]
+        ]
+    )
+
+
+@router.callback_query(F.data.startswith("delete_task:"))
+async def delete_task_callback(callback: CallbackQuery):
+    tg_id = callback.from_user.id
+
+    # достаём токен
+    db = SessionLocal()
+    try:
+        token = get_valid_token(db, tg_id)
+    finally:
+        db.close()
+
+    if not token:
+        await callback.answer("Сначала авторизуйтесь через /start.", show_alert=True)
+        return
+
+    # парсим id задачи из callback_data
+    _, task_id_str = callback.data.split(":", 1)
+    task_id = int(task_id_str)
+
+    # вызываем DELETE /tasks/{id}
+    try:
+        async with httpx.AsyncClient(base_url=SERVER_BASE_URL, timeout=10.0) as client:
+            resp = await client.delete(
+                f"/tasks/{task_id}",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.exception("Failed to delete task %s", task_id)
+        await callback.answer(f"Не удалось удалить задачу: {exc}", show_alert=True)
+        return
+
+    # визуально обновляем сообщение
+    await callback.message.edit_text(f"Задача {task_id} удалена ✅")
+    await callback.answer("Задача удалена.")
