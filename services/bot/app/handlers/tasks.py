@@ -119,6 +119,7 @@ async def cmd_tasks_list(message: Message):
     tasks = await api_get_task_list(token)
     if tasks is None:
         await message.answer("Failed to get tasks list")
+        return
 
     for task in tasks:
         task_id = task["id"]

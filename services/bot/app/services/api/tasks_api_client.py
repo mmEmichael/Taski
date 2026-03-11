@@ -1,8 +1,6 @@
-import asyncio
 import logging
 
 import httpx
-from aiogram.types import Message, CallbackQuery
 
 from app.config import SERVER_BASE_URL
 
