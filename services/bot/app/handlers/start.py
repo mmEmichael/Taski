@@ -4,6 +4,7 @@ import httpx
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 from app.config import SERVER_BASE_URL
 from app.database import SessionLocal
@@ -11,6 +12,16 @@ from app.services.session_service import save_token
 
 router = Router()
 logger = logging.getLogger(__name__)
+
+create_task_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="Создать задачу"),
+            KeyboardButton(text="Задачи")
+        ],
+    ],
+    resize_keyboard=True,
+)
 
 async def register_and_auth_user_on_server(
     tg_id: int,
@@ -70,4 +81,7 @@ async def handle_start(message: Message):
         db.close()
         
     logger.info("Token from server %s", token)
-    await message.answer(f"Token from server {token}")
+    await message.answer(
+        f"Привет @{username}!",
+        reply_markup=create_task_kb,
+    )

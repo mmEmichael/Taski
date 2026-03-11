@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models import BotToken
 
-def get_session_by_tg_id(db: Session, tg_id: str):
+def get_session_by_tg_id(db: Session, tg_id: int):
     return db.query(BotToken).filter(BotToken.tg_id == tg_id).one_or_none()
 
 def save_token(
