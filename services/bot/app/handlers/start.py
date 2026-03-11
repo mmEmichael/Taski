@@ -9,19 +9,10 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from app.config import SERVER_BASE_URL
 from app.database import SessionLocal
 from app.services.session_service import save_token
+from app.keyboards.tasks import create_task_kb
 
 router = Router()
 logger = logging.getLogger(__name__)
-
-create_task_kb = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="Создать задачу"),
-            KeyboardButton(text="Задачи")
-        ],
-    ],
-    resize_keyboard=True,
-)
 
 async def register_and_auth_user_on_server(
     tg_id: int,

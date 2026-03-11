@@ -5,11 +5,10 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.services.session_service import get_db_and_token
+from app.keyboards.tasks import create_task_kb, delete_task_inline_kb, cancel_kb
 from app.services.api.tasks_api_client import api_create_task, api_get_task_list, api_delete_task
-from app.handlers.start import create_task_kb
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -19,16 +18,9 @@ logger = logging.getLogger(__name__)
 # //////////////////////////////////////////////////////////////////
 
 
-cancel_kb = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text="Отменить", callback_data="cancel_create_task")]
-    ]
-)
-
 class CreateTaskStates(StatesGroup):
     title = State()
     description = State()
-
 
 @router.message(Command("newtask"))
 @router.message(F.text == "Создать задачу")
@@ -131,19 +123,6 @@ async def cmd_tasks_list(message: Message):
 # //////////////////////////////////////////////////////////////////
 # DELETE Task
 # //////////////////////////////////////////////////////////////////
-
-
-def delete_task_inline_kb(task_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="Удалить🗑️",
-                    callback_data=f"delete_task:{task_id}",
-                )
-            ]
-        ]
-    )
 
 
 @router.callback_query(F.data.startswith("delete_task:"))
