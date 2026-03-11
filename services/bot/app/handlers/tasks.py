@@ -9,7 +9,6 @@ from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.config import SERVER_BASE_URL
-from app.database import SessionLocal
 from app.services.session_service import get_db_and_token
 from app.handlers.start import create_task_kb
 
@@ -34,7 +33,7 @@ class CreateTaskStates(StatesGroup):
 
 @router.message(Command("newtask"))
 @router.message(F.text == "Создать задачу")
-async def cmd_new_task(message: Message, state: FSMContext):
+async def cmd_create_task(message: Message, state: FSMContext):
     """
     Старт создания задачи: проверяем токен, спрашиваем заголовок.
     """
@@ -108,7 +107,7 @@ async def process_description(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data == "cancel_create_task")
-async def cancel_create_task(callback: CallbackQuery, state: FSMContext):
+async def cmd_cancel_create_task(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.edit_reply_markup()  # убрать кнопки под последним сообщением
     await callback.message.answer(
@@ -124,7 +123,7 @@ async def cancel_create_task(callback: CallbackQuery, state: FSMContext):
 
 @router.message(Command("taskslist"))
 @router.message(F.text == "Задачи")
-async def cmd_new_task(message: Message):
+async def cmd_tasks_list(message: Message):
     """
     Выводим список всех задач
     """
@@ -173,7 +172,7 @@ def delete_task_inline_kb(task_id: int) -> InlineKeyboardMarkup:
 
 
 @router.callback_query(F.data.startswith("delete_task:"))
-async def delete_task_callback(callback: CallbackQuery):
+async def cmd_delete_task(callback: CallbackQuery):
     tg_id = callback.from_user.id
 
     token = await get_db_and_token(tg_id=tg_id, event=callback)
