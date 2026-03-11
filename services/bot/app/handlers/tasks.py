@@ -10,6 +10,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.config import SERVER_BASE_URL
 from app.services.session_service import get_db_and_token
+from app.services.api.tasks_api_client import api_create_task, api_get_task_list, api_delete_task
 from app.handlers.start import create_task_kb
 
 router = Router()
@@ -78,24 +79,8 @@ async def process_description(message: Message, state: FSMContext):
     title = data["title"]
     token = data["access_token"]
 
-    try:
-        async with httpx.AsyncClient(base_url=SERVER_BASE_URL, timeout=10.0) as client:
-            resp = await client.post(
-                "/tasks/create",
-                json={
-                    "title": title,
-                    "description": description,
-                    # status и due_at пока не задаём — сервер их считает опциональными
-                },
-                headers={"Authorization": f"Bearer {token}"},
-            )
-            resp.raise_for_status()
-            task = resp.json()
-    except httpx.HTTPError as exc:
-        logger.exception("Failed to create task on server")
-        await state.clear()
-        await message.answer(f"Не удалось создать задачу: {exc}")
-        return
+    if not await api_create_task(token, title, description):
+        await message.answer("Failed to create task on server")
 
     await state.clear()
 
@@ -131,18 +116,9 @@ async def cmd_tasks_list(message: Message):
 
     token = await get_db_and_token(tg_id=tg_id, event=message)
 
-    try:
-        async with httpx.AsyncClient(base_url=SERVER_BASE_URL, timeout=10.0) as client:
-            resp = await client.get(
-                "/tasks",
-                headers={"Authorization": f"Bearer {token}"},
-            )
-            resp.raise_for_status()
-            tasks = resp.json()
-    except httpx.HTTPError as exc:
-        logger.exception("Failed to get tasks list")
-        await message.answer(f"Не удалось получить список задач: {exc}")
-        return
+    tasks = await api_get_task_list(token)
+    if tasks is None:
+        await message.answer("Failed to get tasks list")
 
     for task in tasks:
         task_id = task["id"]
@@ -181,18 +157,8 @@ async def cmd_delete_task(callback: CallbackQuery):
     _, task_id_str = callback.data.split(":", 1)
     task_id = int(task_id_str)
 
-    # вызываем DELETE /tasks/{id}
-    try:
-        async with httpx.AsyncClient(base_url=SERVER_BASE_URL, timeout=10.0) as client:
-            resp = await client.delete(
-                f"/tasks/{task_id}",
-                headers={"Authorization": f"Bearer {token}"},
-            )
-            resp.raise_for_status()
-    except httpx.HTTPError as exc:
-        logger.exception("Failed to delete task %s", task_id)
-        await callback.answer(f"Не удалось удалить задачу: {exc}", show_alert=True)
-        return
+    if not await api_delete_task(token, task_id):
+        await callback.answer("Failed to delete task %s", task_id)
 
     # визуально обновляем сообщение
     await callback.message.edit_text(f"Задача {task_id} удалена ✅")
