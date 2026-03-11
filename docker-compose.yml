@@ -1,4 +1,17 @@
 services:
+  bot:
+    build: ./services/bot
+    container_name: bot
+    depends_on:
+     - server
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - SERVER_BASE_URL=http://nginx:80
+      - TG_TOKEN=${TG_TOKEN}
+    volumes:
+      - ./services/bot:/app
+    restart: unless-stopped
   server:
     build: ./services/server
     container_name: server
@@ -10,7 +23,6 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
-      - SERVER_BASE_URL="http://server:8000"
     volumes:
       - ./services/server:/app
     restart: unless-stopped
