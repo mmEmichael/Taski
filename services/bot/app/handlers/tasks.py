@@ -10,7 +10,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.config import SERVER_BASE_URL
 from app.database import SessionLocal
-from app.services.session_service import get_valid_token
+from app.services.session_service import get_db_and_token
 from app.handlers.start import create_task_kb
 
 router = Router()
@@ -40,15 +40,7 @@ async def cmd_new_task(message: Message, state: FSMContext):
     """
     tg_id = message.from_user.id
 
-    db = SessionLocal()
-    try:
-        token = get_valid_token(db, tg_id)
-    finally:
-        db.close()
-
-    if not token:
-        await message.answer("Сначала авторизуйтесь через /start, чтобы я связался с сервером.")
-        return
+    token = await get_db_and_token(tg_id=tg_id, event=message)
 
     # Сохраняем токен в FSM-контексте, чтобы не лезть в БД на каждом шаге
     await state.update_data(access_token=token)
@@ -138,15 +130,7 @@ async def cmd_new_task(message: Message):
     """
     tg_id = message.from_user.id
 
-    db = SessionLocal()
-    try:
-        token = get_valid_token(db, tg_id)
-    finally:
-        db.close()
-
-    if not token:
-        await message.answer("Сначала авторизуйтесь через /start, чтобы я связался с сервером.")
-        return
+    token = await get_db_and_token(tg_id=tg_id, event=message)
 
     try:
         async with httpx.AsyncClient(base_url=SERVER_BASE_URL, timeout=10.0) as client:
@@ -192,16 +176,7 @@ def delete_task_inline_kb(task_id: int) -> InlineKeyboardMarkup:
 async def delete_task_callback(callback: CallbackQuery):
     tg_id = callback.from_user.id
 
-    # достаём токен
-    db = SessionLocal()
-    try:
-        token = get_valid_token(db, tg_id)
-    finally:
-        db.close()
-
-    if not token:
-        await callback.answer("Сначала авторизуйтесь через /start.", show_alert=True)
-        return
+    token = await get_db_and_token(tg_id=tg_id, event=callback)
 
     # парсим id задачи из callback_data
     _, task_id_str = callback.data.split(":", 1)
