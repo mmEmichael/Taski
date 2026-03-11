@@ -1,6 +1,6 @@
 """API пользователей — регистрация, логин, информация."""
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import insert
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from jwt import encode
 
@@ -14,20 +14,20 @@ router = APIRouter()
 
 
 @router.post("/user/register")
-async def register_user(
-    credentials: UserCredentials, 
-    db: Session = Depends(get_db)
-    ):
-    """Регистрация нового пользователя."""
+async def register_user(credentials: UserCredentials, db: Session = Depends(get_db)):
+
     password_hash = hash_password(credentials.password)
-    query = insert(User).values(
+
+    stmt = insert(User).values(
         username=credentials.username,
         password_hash=password_hash,
-        tg_id=credentials.tg_id,
-    )
-    db.execute(query)
+        tg_id=credentials.tg_id
+    ).on_conflict_do_nothing(index_elements=["tg_id"])
+
+    db.execute(stmt)
     db.commit()
-    return {"message": "User registered successfully"}
+
+    return {"message": "ok"}
 
 
 @router.post("/user/auth")
