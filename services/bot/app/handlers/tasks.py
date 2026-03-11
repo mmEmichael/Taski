@@ -1,6 +1,5 @@
 import logging
 
-import httpx
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -8,7 +7,6 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from app.config import SERVER_BASE_URL
 from app.services.session_service import get_db_and_token
 from app.services.api.tasks_api_client import api_create_task, api_get_task_list, api_delete_task
 from app.handlers.start import create_task_kb
