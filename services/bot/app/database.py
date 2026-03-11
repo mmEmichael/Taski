@@ -14,12 +14,3 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine,
 )
-
-
-def get_db():
-    """Dependency: выдаёт сессию БД, закрывает после завершения."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
