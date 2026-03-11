@@ -10,6 +10,7 @@ from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from app.config import SERVER_BASE_URL
 from app.database import SessionLocal
 from app.services.session_service import get_valid_token
+from app.handlers.start import create_task_kb
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -52,10 +53,8 @@ async def cmd_new_task(message: Message, state: FSMContext):
     # Сохраняем токен в FSM-контексте, чтобы не лезть в БД на каждом шаге
     await state.update_data(access_token=token)
     await state.set_state(CreateTaskStates.title)
-    await message.answer(
-        "Введите заголовок задачи.",
-        reply_markup=cancel_kb
-    )
+    await message.answer("Начинаем создание задачи…", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Введите заголовок задачи.", reply_markup=cancel_kb)
 
 
 @router.message(CreateTaskStates.title)
@@ -110,14 +109,20 @@ async def process_description(message: Message, state: FSMContext):
     await state.clear()
 
     # task — это то, что вернёт /tasks/create (id, title и т.п.)
-    await message.answer(f"Задача создана ✅\nНазвание: {title}")
+    await message.answer(
+        f"Задача создана ✅\nНазвание: {title}",
+        reply_markup=create_task_kb
+        )
 
 
 @router.callback_query(F.data == "cancel_create_task")
 async def cancel_create_task(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.edit_reply_markup()  # убрать кнопки под последним сообщением
-    await callback.message.answer("Создание задачи отменено.")
+    await callback.message.answer(
+        "Создание задачи отменено.",
+        reply_markup=create_task_kb
+        )
     await callback.answer()  # закрыть "часики" у кнопки
 
 
