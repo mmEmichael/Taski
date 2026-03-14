@@ -4,7 +4,6 @@ import httpx
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 from app.config import SERVER_BASE_URL
 from app.database import SessionLocal

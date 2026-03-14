@@ -8,7 +8,7 @@ from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 
 from app.services.session_service import get_db_and_token
 from app.keyboards.tasks import create_task_kb, delete_task_inline_kb, cancel_kb
-from app.services.api.tasks_api_client import api_create_task, api_get_task_list, api_delete_task
+from app.services.api.tasks_api_client import api_create_task, api_get_task_list, api_delete_task, api_get_task_info
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -141,3 +141,33 @@ async def cmd_delete_task(callback: CallbackQuery):
     # визуально обновляем сообщение
     await callback.message.edit_text(f"Задача {task_id} удалена ✅")
     await callback.answer("Задача удалена.")
+
+
+# //////////////////////////////////////////////////////////////////
+# Get task info
+# //////////////////////////////////////////////////////////////////
+
+
+@router.callback_query(F.data.startswith("task_info:"))
+async def cmd_get_task_info(callback: CallbackQuery):
+    tg_id = callback.from_user.id
+
+    token = await get_db_and_token(tg_id=tg_id, event=callback)
+
+    # парсим id задачи из callback_data
+    _, task_id_str = callback.data.split(":", 1)
+    task_id = int(task_id_str)
+
+    task = await api_get_task_info(token, task_id)
+    if task is None:
+        await callback.answer("Failed to get tasks list")
+        return
+
+    task_title = task["title"]
+    task_description = task["description"]
+    task_status = task["status"]
+    task_due_at = task["due_at"]
+
+    # визуально обновляем сообщение
+    #await callback.message.edit_text(f"{task_title}\n{task_description}\n{task_status}\n{task_due_at}")
+    await callback.message.answer(f"{task_title}\n{task_description}\n{task_status}\n{task_due_at}")

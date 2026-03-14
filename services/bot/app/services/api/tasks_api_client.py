@@ -7,7 +7,7 @@ from app.config import SERVER_BASE_URL
 logger = logging.getLogger(__name__)
 
 async def api_create_task(
-        token: int,
+        token: str,
         title: str,
         description: str
 ) -> bool:
@@ -32,7 +32,7 @@ async def api_create_task(
     
     return True
 
-async def api_get_task_list(token: int):
+async def api_get_task_list(token: str):
     """
     Запрос списка задач c сервера
     """
@@ -51,11 +51,11 @@ async def api_get_task_list(token: int):
     return tasks
 
 async def api_delete_task(
-    token: int,
+    token: str,
     task_id: int
 ) -> bool:
     """
-    Запрос списка задач c сервера
+    Удаление задач c сервера
     """
     try:
         async with httpx.AsyncClient(base_url=SERVER_BASE_URL, timeout=10.0) as client:
@@ -69,3 +69,24 @@ async def api_delete_task(
         return False
     
     return True
+
+async def api_get_task_info(
+        token: str,
+        task_id: int
+):
+    """
+    Запрос информации о задаче по id задач c сервера
+    """
+    try:
+        async with httpx.AsyncClient(base_url=SERVER_BASE_URL, timeout=10.0) as client:
+            resp = await client.get(
+                f"/tasks/{task_id}",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            resp.raise_for_status()
+            task = resp.json()
+    except httpx.HTTPError as exc:
+        logger.exception("Failed to delete task %s", task_id)
+        return None
+    
+    return task

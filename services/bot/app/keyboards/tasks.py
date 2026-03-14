@@ -26,6 +26,10 @@ def delete_task_inline_kb(task_id: int) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text="Удалить🗑️",
                     callback_data=f"delete_task:{task_id}",
+                ),
+                InlineKeyboardButton(
+                    text="Иноформация",
+                    callback_data=f"task_info:{task_id}",
                 )
             ]
         ]
