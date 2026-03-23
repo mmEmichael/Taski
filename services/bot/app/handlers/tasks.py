@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from aiogram import Router, F
 from aiogram.filters import Command
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 class CreateTaskStates(StatesGroup):
     title = State()
     description = State()
+    due_at = State()
 
 @router.message(Command("newtask"))
 @router.message(F.text == "Создать задачу")
@@ -60,25 +62,55 @@ async def process_title(message: Message, state: FSMContext):
 @router.message(CreateTaskStates.description)
 async def process_description(message: Message, state: FSMContext):
     """
-    Принимаем описание, создаём задачу на сервере и завершаем сценарий.
+    Принимаем описание и переходим к шагу ввода времени напоминания.
     """
     description_raw = (message.text or "").strip()
     description = None if description_raw == "-" else description_raw
 
     data = await state.get_data()
     title = data["title"]
+    await state.update_data(description=description)
+    await state.set_state(CreateTaskStates.due_at)
+    await message.answer(
+        "Введите время напоминания в формате `YYYY-MM-DD HH:MM`.\n"
+        "Можно указать `-`, если напоминание не нужно.",
+        reply_markup=cancel_kb,
+    )
+
+@router.message(CreateTaskStates.due_at)
+async def process_due_at(message: Message, state: FSMContext):
+    """
+    Принимаем время напоминания (due_at), создаём задачу и завершаем сценарий.
+    """
+    due_at_raw = (message.text or "").strip()
+    if due_at_raw in {"", "-"}:
+        due_at = None
+    else:
+        try:
+            # datetime.fromisoformat принимает и формат с пробелом между датой и временем.
+            dt = datetime.fromisoformat(due_at_raw)
+            due_at = dt.isoformat(timespec="seconds")
+        except ValueError:
+            await message.answer(
+                "Не понял формат времени. Используйте `YYYY-MM-DD HH:MM` (например, `2026-03-23 18:30`)."
+            )
+            return
+
+    data = await state.get_data()
+    title = data["title"]
+    description = data.get("description")
     token = data["access_token"]
 
-    if not await api_create_task(token, title, description):
+    if not await api_create_task(token, title, description, due_at=due_at):
         await message.answer("Failed to create task on server")
+        return
 
     await state.clear()
-
-    # task — это то, что вернёт /tasks/create (id, title и т.п.)
+    reminder_part = f"\nНапоминание: {due_at}" if due_at is not None else "\nНапоминание: не задано"
     await message.answer(
-        f"Задача создана ✅\nНазвание: {title}",
-        reply_markup=create_task_kb
-        )
+        f"Задача создана ✅\nНазвание: {title}{reminder_part}",
+        reply_markup=create_task_kb,
+    )
 
 
 @router.callback_query(F.data == "cancel_create_task")

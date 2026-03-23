@@ -1,4 +1,6 @@
 """Схемы для задач — создание и обновление."""
+from datetime import datetime
+
 from pydantic import BaseModel
 
 from app.models.task import TaskStatus
@@ -8,7 +10,7 @@ class TaskCreate(BaseModel):
     title: str
     description: str | None = None
     status: TaskStatus | None = None
-    due_at: str | None = None
+    due_at: datetime | None = None
 
 
 class TaskUpdate(BaseModel):
@@ -17,5 +19,5 @@ class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     status: TaskStatus | None = None
-    due_at: str | None = None
+    due_at: datetime | None = None
 

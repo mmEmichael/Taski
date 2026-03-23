@@ -9,20 +9,24 @@ logger = logging.getLogger(__name__)
 async def api_create_task(
         token: str,
         title: str,
-        description: str
+        description: str | None,
+        due_at: str | None = None,
 ) -> bool:
     """
     Запрос на создание задачи на сервере
     """
     try:
         async with httpx.AsyncClient(base_url=SERVER_BASE_URL, timeout=10.0) as client:
+            payload = {
+                "title": title,
+                "description": description,
+            }
+            if due_at is not None:
+                payload["due_at"] = due_at
+
             resp = await client.post(
                 "/tasks/create",
-                json={
-                    "title": title,
-                    "description": description,
-                    # status и due_at пока не задаём — сервер их считает опциональными
-                },
+                json=payload,
                 headers={"Authorization": f"Bearer {token}"},
             )
             resp.raise_for_status()
