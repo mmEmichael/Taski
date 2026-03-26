@@ -14,13 +14,10 @@ def create_task(db: Session, user_id: int, data: TaskCreate) -> dict:
         description=data.description,
         status=data.status,
         due_at=data.due_at,
-    )
-    db.execute(query)
+    ).returning(Task.id)
+    task_id = db.scalar(query)
     db.commit()
 
-    #Получаем id задачи
-    task = db.query(Task).filter(Task.title == data.title, Task.user_id == user_id).first()
-    task_id = task.id
     return task_id
 
 
