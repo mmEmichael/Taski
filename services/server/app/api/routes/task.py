@@ -1,5 +1,6 @@
 """API задач — CRUD операции."""
 from fastapi import APIRouter, Depends, Query
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import Null
 from sqlalchemy.orm import Session
 
@@ -18,17 +19,19 @@ from app.services.celery_service import create_celery_task
 
 router = APIRouter()
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @router.post("/tasks/create")
 async def create_task_route(
     data: TaskCreate,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user),
+    token:str = Depends(oauth2_scheme)
 ):
     """Создание новой задачи."""
     task_id = create_task(db=db, user_id=user_id, data=data)
     #Cоздаем задачу celery
-    await create_celery_task(task_id=task_id, due_at=data.due_at)
+    await create_celery_task(task_id=task_id, due_at=data.due_at, token=token)
     return task_id
 
 

@@ -9,6 +9,23 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - SERVER_BASE_URL=http://nginx:80
       - TG_TOKEN=${TG_TOKEN}
+      - TZ=Europe/Moscow
+    volumes:
+      - ./services/bot:/app
+    restart: unless-stopped
+  worker:
+    build: ./services/bot
+    container_name: celery_worker
+    # Запуск воркера (укажите путь к объекту celery_app)
+    command: celery -A app.services.celery.celery_service:app worker --loglevel=info
+    depends_on:
+      - redis
+      - db
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - TG_TOKEN=${TG_TOKEN}
+      - PYTHONPATH=/app
+      - TZ=Europe/Moscow
     volumes:
       - ./services/bot:/app
     restart: unless-stopped
@@ -23,6 +40,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
+      - TZ=Europe/Moscow
     volumes:
       - ./services/server:/app
     restart: unless-stopped
