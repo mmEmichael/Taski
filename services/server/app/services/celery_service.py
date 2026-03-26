@@ -13,5 +13,6 @@ def retun_scheduled_task_id(task_id: int):
     return task_id
 
 async def create_celery_task(task_id: int, due_at: datetime):
-    retun_scheduled_task_id.apply_async(args=[task_id], eta=due_at)
-    return("Sheduled task created")
+    if due_at != None:
+        retun_scheduled_task_id.apply_async(args=[task_id], eta=due_at)
+        return("Sheduled task created")

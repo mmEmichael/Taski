@@ -28,8 +28,7 @@ async def create_task_route(
     """Создание новой задачи."""
     task_id = create_task(db=db, user_id=user_id, data=data)
     #Cоздаем задачу celery
-    if data.due_at != Null:
-        create_celery_task(task_id=task_id, due_at=data.due_at)
+    await create_celery_task(task_id=task_id, due_at=data.due_at)
     return task_id
 
 
