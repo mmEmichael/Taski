@@ -4,3 +4,4 @@ sqlalchemy
 httpx
 aiogram
 redis
+celery[redis]

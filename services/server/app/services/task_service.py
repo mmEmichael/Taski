@@ -17,7 +17,11 @@ def create_task(db: Session, user_id: int, data: TaskCreate) -> dict:
     )
     db.execute(query)
     db.commit()
-    return {"message": "Task created successfully"}
+
+    #Получаем id задачи
+    task = db.query(Task).filter(Task.title == data.title, Task.user_id == user_id).first()
+    task_id = task.id
+    return task_id
 
 
 def list_tasks(

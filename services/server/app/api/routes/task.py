@@ -1,5 +1,6 @@
 """API задач — CRUD операции."""
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import Null
 from sqlalchemy.orm import Session
 
 from app.schemas.task import TaskCreate, TaskUpdate
@@ -13,6 +14,7 @@ from app.services.task_service import (
     update_task,
     delete_task,
 )
+from app.services.celery_service import create_celery_task
 
 router = APIRouter()
 
@@ -24,7 +26,11 @@ async def create_task_route(
     user_id: int = Depends(get_current_user),
 ):
     """Создание новой задачи."""
-    return create_task(db=db, user_id=user_id, data=data)
+    task_id = create_task(db=db, user_id=user_id, data=data)
+    #Cоздаем задачу celery
+    if data.due_at != Null:
+        create_celery_task(task_id=task_id, due_at=data.due_at)
+    return task_id
 
 
 @router.get("/tasks")
